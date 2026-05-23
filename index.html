@@ -3,8 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>training-hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#141414" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hub" />
+    <title>Hub</title>
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #141414;
+        overscroll-behavior: none;
+        height: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Prevent iOS zoom on input focus — must be 16px or larger */
+      input, textarea, select {
+        font-size: 16px;
+      }
+      /* Hide scrollbars everywhere */
+      ::-webkit-scrollbar { display: none; }
+      * { scrollbar-width: none; }
+      /* Prevent text selection on interactive elements */
+      button { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

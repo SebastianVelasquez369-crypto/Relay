@@ -5,18 +5,18 @@ import {
 } from 'recharts'
 
 // ─── Accent ───────────────────────────────────────────────────────────────────
-const A = '#00C9A7' // dark-mode default; components use T.ACC for mode-aware accent
+const A = '#E07828' // dark-mode default; components use T.ACC for mode-aware accent
 
 // ─── Theme definitions ────────────────────────────────────────────────────────
 const DARK = {
-  BG:     '#0D0D0D',
-  SURF:   '#1A1A1A',
-  SURF2:  '#242424',
-  BORDER: '#2A2A2A',
+  BG:     '#141414',
+  SURF:   '#1E1E1E',
+  SURF2:  '#272727',
+  BORDER: '#303030',
   TEXT:   '#F5F5F0',
-  MUTED:  '#666666',
-  DIM:    '#3A3A3A',
-  ACC:    '#00C9A7',
+  MUTED:  '#6B6B6B',
+  DIM:    '#3D3D3D',
+  ACC:    '#E07828',
 }
 // Warm parchment / Porsche cognac-leather aesthetic
 const LIGHT = {
@@ -35,8 +35,8 @@ const useT    = () => useContext(ThemeCtx).colors
 const useMode = () => { const c = useContext(ThemeCtx); return { mode: c.mode, toggle: c.toggle } }
 const makeS   = T => ({
   pg:   { padding: '32px 18px' },
-  card: { background: T.SURF, border: `1px solid ${T.BORDER}`, borderRadius: 14, padding: '16px 14px' },
-  inp:  { width: '100%', background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 10, color: T.TEXT, fontSize: 14, padding: '12px', outline: 'none', boxSizing: 'border-box' },
+  card: { background: T.SURF, border: `1px solid ${T.BORDER}`, borderRadius: 22, padding: '20px 18px' },
+  inp:  { width: '100%', background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 12, color: T.TEXT, fontSize: 14, padding: '12px 14px', outline: 'none', boxSizing: 'border-box' },
 })
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -330,6 +330,7 @@ const TABS = [
   { id: 'eat',   label: 'Eat',   Icon: IconEat   },
   { id: 'log',   label: 'Log',   Icon: IconLog   },
 ]
+const CARDIO_TO_MODALITY = { 0: 'bike', 1: 'bike', 2: 'run', 3: 'swim', 4: 'bike', 5: 'run', 6: 'swim' }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const todayKey = () => new Date().toISOString().slice(0, 10)
@@ -410,11 +411,11 @@ function MacroStat({ label, consumed, target, unit }) {
   const A = T.ACC
   const pct = Math.min((consumed / target) * 100, 100)
   return (
-    <div style={{ background: T.SURF2, borderRadius: 12, padding: '14px 12px' }}>
+    <div style={{ background: T.SURF2, borderRadius: 18, padding: '16px 14px' }}>
       <div style={{ fontSize: 20, fontWeight: 900, color: T.TEXT, letterSpacing: '-0.5px', lineHeight: 1 }}>{Math.round(consumed)}</div>
       <div style={{ fontSize: 10, color: T.MUTED, marginTop: 3, marginBottom: 9 }}>/ {target}{unit}</div>
-      <div style={{ background: T.BORDER, borderRadius: 3, height: 3 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: A, borderRadius: 3, transition: 'width .5s ease' }} />
+      <div style={{ background: T.BORDER, borderRadius: 4, height: 4 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: A, borderRadius: 4, transition: 'width .5s ease' }} />
       </div>
       <div style={{ fontSize: 11, color: T.MUTED, fontWeight: 600, marginTop: 7 }}>{label}</div>
     </div>
@@ -424,7 +425,7 @@ function StatCard({ label, value, sub }) {
   const T = useT()
   const A = T.ACC
   return (
-    <div style={{ background: T.SURF2, borderRadius: 12, padding: '16px 14px' }}>
+    <div style={{ background: T.SURF2, borderRadius: 18, padding: '16px 14px' }}>
       <div style={{ fontSize: 26, fontWeight: 900, color: T.TEXT, letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: A, fontWeight: 600, marginTop: 4 }}>{sub}</div>}
       <div style={{ fontSize: 11, color: T.MUTED, marginTop: 6, fontWeight: 600 }}>{label}</div>
@@ -436,7 +437,7 @@ function ChartTooltip({ active, payload, label }) {
   const A = T.ACC
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: T.SURF, border: `1px solid ${T.BORDER}`, borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
+    <div style={{ background: T.SURF, border: `1px solid ${T.BORDER}`, borderRadius: 12, padding: '8px 12px', fontSize: 12 }}>
       <div style={{ color: T.MUTED, marginBottom: 3 }}>{label}</div>
       <div style={{ color: A, fontWeight: 700 }}>{payload[0]?.value} {payload[0]?.name}</div>
     </div>
@@ -509,199 +510,252 @@ function TimelineItem({ time, label, detail, checked, onToggle, isLast, accent }
 }
 
 // ─── Today tab ────────────────────────────────────────────────────────────────
-function TodayTab({ meals, setTab }) {
+function TodayTab({ meals, setTab, setModality }) {
   const T = useT()
   const A = T.ACC
   const { pg, card, inp } = makeS(T)
-  const now     = new Date()
-  const dow     = now.getDay()
-  const session = SESSIONS[dow]
-  const cardio  = CARDIO[dow]
+  const now            = new Date()
+  const dow            = now.getDay()
+  const session        = SESSIONS[dow]
+  const cardio         = CARDIO[dow]
+  const cardioModality = CARDIO_TO_MODALITY[dow]
+  const cardioMod      = MODALITIES.find(m => m.id === cardioModality)
+  const cardioTint     = cardioMod?.tint || A
 
-  const [plan, setPlan]             = useState(() => lsLoad(`plan_${todayKey()}`, {}))
-  const [cardioDone, setCardioDone] = useState(() => lsLoad(`cardio_done_${todayKey()}`, false))
-  const [notes, setNotes]           = useState(() => lsLoad(`notes_${todayKey()}`, ''))
-  const allLogs    = useMemo(() => loadAllDailyLogs(), [])
-  const todayLog   = lsLoad(`daily_${todayKey()}`, {})
-  const lastWeight = allLogs.filter(l => l.weight).slice(-1)[0]?.weight ?? null
-  const hrv        = todayLog.hrv ?? null
-  const readiness  = computeReadiness(hrv, allLogs)
-  const hrvInfo    = hrv ? HRV_MAP[hrv] : null
+  const allLogs  = useMemo(() => loadAllDailyLogs(), [])
+  const streak   = useMemo(() => computeStreak(allLogs), [allLogs])
+
+  const [hrv, setHrvState] = useState(() => lsLoad(`daily_${todayKey()}`, {}).hrv ?? null)
+  const setHrv = val => {
+    const next = hrv === val ? null : val
+    setHrvState(next)
+    const ex = lsLoad(`daily_${todayKey()}`, {})
+    lsSave(`daily_${todayKey()}`, { ...ex, hrv: next })
+  }
+
+  const [weight, setWeight]     = useState(() => lsLoad(`daily_${todayKey()}`, {}).weight ?? '')
+  const [weightSaved, setWeightSaved] = useState(!!lsLoad(`daily_${todayKey()}`, {}).weight)
+  const saveWeight = () => {
+    if (!weight) return
+    const ex = lsLoad(`daily_${todayKey()}`, {})
+    lsSave(`daily_${todayKey()}`, { ...ex, weight })
+    setWeightSaved(true)
+  }
+
+  const [notes, setNotes] = useState(() => lsLoad(`notes_${todayKey()}`, ''))
+  const handleNotes = e => { setNotes(e.target.value); lsSave(`notes_${todayKey()}`, e.target.value) }
+
+  const readiness      = computeReadiness(hrv, allLogs)
+  const readinessColor = readiness >= 70 ? A : readiness >= 45 ? '#FF9F0A' : '#FF453A'
+  const lastWeight     = allLogs.filter(l => l.weight).slice(-1)[0]?.weight ?? null
 
   const consumed = meals.reduce(
-    (acc, m) => ({ calories: acc.calories + (Number(m.calories) || 0), protein: acc.protein + (Number(m.protein) || 0), carbs: acc.carbs + (Number(m.carbs) || 0), fat: acc.fat + (Number(m.fat) || 0) }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    (acc, m) => ({ calories: acc.calories + (Number(m.calories) || 0), protein: acc.protein + (Number(m.protein) || 0) }),
+    { calories: 0, protein: 0 }
+  )
+  const calPct  = Math.min((consumed.calories / TARGETS.calories) * 100, 100)
+  const protPct = Math.min((consumed.protein  / TARGETS.protein)  * 100, 100)
+
+  const weekDays = useMemo(() => {
+    const dayOfWeek = new Date().getDay()
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() + mondayOffset + i)
+      const dateStr = d.toISOString().slice(0, 10)
+      const isToday = dateStr === todayKey()
+      const dl = lsLoad(`daily_${dateStr}`, {})
+      const ml = lsLoad(`meals_${dateStr}`, [])
+      const ll = lsLoad(`lifts_${dateStr}`, {})
+      const hasData = !!(dl.weight || dl.hrv || dl.cardio?.length || ml.length || Object.keys(ll).length)
+      return { dateStr, dayLabel: d.toLocaleDateString('en-US', { weekday: 'narrow' }), isToday, hasData, isPast: dateStr < todayKey() }
+    })
+  }, [])
+
+  const hour     = now.getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const dayLabel  = now.toLocaleDateString('en-US', { weekday: 'long' })
+  const dateLabel = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+
+  const goTrain = mod => { setModality(mod); setTab('train') }
+
+  const TrainingCard = ({ label, detail, detail2, Icon, tint, mod, badge }) => (
+    <button onClick={() => goTrain(mod)} style={{
+      background: `linear-gradient(145deg, ${tint}14 0%, ${T.SURF} 65%)`,
+      border: `1px solid ${tint}35`,
+      borderRadius: 22, padding: '20px 16px 18px',
+      cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 0,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 11, background: `${tint}18`, border: `1px solid ${tint}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={20} color={tint} />
+        </div>
+        {badge && <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1.2, color: tint, border: `1px solid ${tint}40`, borderRadius: 5, padding: '3px 7px' }}>{badge}</div>}
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 800, color: T.TEXT, marginBottom: 3, letterSpacing: '-0.2px' }}>{label}</div>
+      <div style={{ fontSize: 11, color: T.MUTED, marginBottom: 2, lineHeight: 1.4 }}>{detail}</div>
+      {detail2 && <div style={{ fontSize: 11, color: T.MUTED }}>{detail2}</div>}
+      <div style={{ fontSize: 10, color: tint, fontWeight: 800, marginTop: 10, letterSpacing: 0.8 }}>TAP TO LOG →</div>
+    </button>
   )
 
-  const planItems = [
-    { time: '07:00', label: 'Wake up',           detail: null },
-    { time: '07:10', label: 'Stretch',           detail: '10 min mobility' },
-    { time: '07:20', label: cardio.label,        detail: cardio.detail, accent: A },
-    ...(dow !== 0 ? [{ time: '08:00', label: session.name, detail: `${session.exercises} exercises · ${session.duration} min`, accent: A }] : []),
-    { time: '09:30', label: 'Post-workout meal', detail: '45g protein target' },
-    { time: '12:00', label: 'Work',              detail: null },
-  ]
-
-  const togglePlan = i => { const u = { ...plan, [i]: !plan[i] }; setPlan(u); lsSave(`plan_${todayKey()}`, u) }
-  const handleNotes = e => { setNotes(e.target.value); lsSave(`notes_${todayKey()}`, e.target.value) }
-  const markCardio  = () => { setCardioDone(true); lsSave(`cardio_done_${todayKey()}`, true) }
-
-  const dayLabel  = now.toLocaleDateString('en-US', { weekday: 'long' })
-  const dateLabel = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-
   return (
-    <div style={pg}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.6px', color: T.TEXT }}>{dayLabel}</div>
-        <div style={{ fontSize: 13, color: T.MUTED, marginTop: 3 }}>{dateLabel}</div>
+    <div style={{ ...pg, paddingTop: 28 }}>
+
+      {/* ── Header ── */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 13, color: T.MUTED, fontWeight: 600, letterSpacing: 0.3, marginBottom: 2 }}>{greeting}</div>
+        <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.8px', color: T.TEXT, lineHeight: 1.1 }}>{dayLabel}</div>
+        <div style={{ fontSize: 13, color: T.MUTED, marginTop: 4 }}>{dateLabel}</div>
       </div>
 
-      <SectionLabel>Morning Readiness</SectionLabel>
-      <div style={{ ...card, marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <ReadinessRing score={readiness} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: T.MUTED, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 }}>Readiness</div>
-            <div style={{ display: 'flex', gap: 24 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  {hrvInfo
-                    ? <IconDot size={8} color={hrvInfo.color} />
-                    : <div style={{ width: 8, height: 8, borderRadius: '50%', border: `1px solid ${T.BORDER}` }} />
-                  }
-                  <span style={{ fontSize: 13, fontWeight: 700, color: hrvInfo?.color || T.MUTED }}>{hrvInfo?.label || 'No HRV'}</span>
-                </div>
-                <div style={{ fontSize: 11, color: T.MUTED }}>HRV status</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.TEXT, marginBottom: 3 }}>
-                  {lastWeight ? `${lastWeight} kg` : '—'}
-                </div>
-                <div style={{ fontSize: 11, color: T.MUTED }}>Last logged</div>
-              </div>
-            </div>
+      {/* ── Quick Stats ── */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
+        {[
+          { value: readiness, label: 'READY', color: readinessColor },
+          { value: streak,    label: 'STREAK', color: T.TEXT },
+          { value: lastWeight ? `${lastWeight}` : '—', label: 'KG', color: T.TEXT },
+        ].map((s, i) => (
+          <div key={i} style={{ flex: 1, background: T.SURF, borderRadius: 18, padding: '16px 10px', textAlign: 'center', border: `1px solid ${T.BORDER}` }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 9, color: T.MUTED, marginTop: 4, fontWeight: 700, letterSpacing: 1 }}>{s.label}</div>
           </div>
-        </div>
-        {!hrv && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.BORDER}`, fontSize: 12, color: T.MUTED }}>
-            Log HRV in the Log tab to see your readiness score
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <SectionLabel style={{ marginBottom: 0 }}>Today's Plan</SectionLabel>
-        <span style={{ fontSize: 11, color: T.MUTED, letterSpacing: 0.5 }}>
-          {planItems.filter((_, i) => plan[i]).length} / {planItems.length} done
-        </span>
-      </div>
-      <div style={{
-        ...card,
-        marginBottom: 24,
-        borderColor: `${A}25`,
-        background: `linear-gradient(160deg, ${A}07 0%, ${T.SURF} 40%)`,
-        boxShadow: `0 0 32px ${A}0A`,
-      }}>
-        {planItems.map((item, i) => (
-          <TimelineItem
-            key={i}
-            time={item.time}
-            label={item.label}
-            detail={item.detail}
-            accent={item.accent}
-            checked={!!plan[i]}
-            onToggle={() => togglePlan(i)}
-            isLast={i === planItems.length - 1}
-          />
         ))}
       </div>
 
-      {dow !== 0 && (
-        <>
-          <SectionLabel>Today's Session</SectionLabel>
-          <div
-            onClick={() => setTab('train')}
-            style={{ ...card, marginBottom: 24, cursor: 'pointer', position: 'relative', overflow: 'hidden', borderColor: `${A}30` }}
-          >
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: A }} />
-            <div style={{ paddingLeft: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.5px', color: T.TEXT }}>{session.name}</div>
-                <div style={{ textAlign: 'right' }}>
-                  {session.badge && <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 5, padding: '3px 8px', marginBottom: 4 }}>{session.badge}</div>}
-                  <div style={{ fontSize: 11, color: A, fontWeight: 600 }}>{session.duration} min</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 12, color: T.MUTED, marginBottom: 14 }}>{session.focus}</div>
-              <div style={{ borderTop: `1px solid ${T.BORDER}`, paddingTop: 12 }}>
-                {session.preview.map((ex, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
-                    <div style={{ width: 3, height: 3, borderRadius: '50%', background: A, flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: T.TEXT }}>{ex}</span>
-                  </div>
-                ))}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4, marginTop: 8 }}>
-                  <span style={{ fontSize: 12, color: T.MUTED }}>+{session.exercises - 3} more</span>
-                  <IconArrow size={13} color={T.MUTED} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* ── Today's Training ── */}
+      <SectionLabel>Today's Training</SectionLabel>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+        {dow === 0 ? (
+          <>
+            <TrainingCard label="Long Bike" detail="75 min · Zone 2" Icon={IconBike} tint="#00C47A" mod="bike" />
+            <TrainingCard label="Yoga" detail="Recovery flow" detail2="20–30 min" Icon={IconYoga} tint="#7B5BB8" mod="yoga" />
+          </>
+        ) : (
+          <>
+            <TrainingCard
+              label={session.name}
+              detail={session.focus}
+              detail2={`${session.duration} min`}
+              Icon={IconTrain}
+              tint={A}
+              mod="lift"
+              badge={session.badge}
+            />
+            <TrainingCard
+              label={cardio.label}
+              detail={cardio.detail}
+              Icon={cardio.Icon}
+              tint={cardioTint}
+              mod={cardioModality}
+            />
+          </>
+        )}
+      </div>
 
+      {/* ── Nutrition ── */}
       <SectionLabel>Nutrition</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 24 }}>
-        <MacroStat label="Calories" consumed={consumed.calories} target={TARGETS.calories} unit=" kcal" />
-        <MacroStat label="Protein"  consumed={consumed.protein}  target={TARGETS.protein}  unit="g" />
-        <MacroStat label="Carbs"    consumed={consumed.carbs}    target={TARGETS.carbs}    unit="g" />
-        <MacroStat label="Fat"      consumed={consumed.fat}      target={TARGETS.fat}      unit="g" />
-      </div>
-
-      <SectionLabel>Cardio Target</SectionLabel>
-      <div style={{ ...card, marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: `${A}15`, border: `1px solid ${A}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <cardio.Icon size={22} color={A} />
-          </div>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.TEXT, marginBottom: 2 }}>{cardio.label}</div>
-            <div style={{ fontSize: 13, color: T.MUTED }}>{cardio.detail}</div>
-          </div>
-          {cardioDone && (
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <IconCheck size={16} color={A} />
-              <span style={{ fontSize: 12, color: A, fontWeight: 700 }}>Done</span>
-            </div>
-          )}
+      <button onClick={() => setTab('eat')} style={{ ...card, marginBottom: 28, width: '100%', textAlign: 'left', cursor: 'pointer', boxSizing: 'border-box', borderColor: `${A}22` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: T.TEXT }}>Today's Macros</span>
+          <span style={{ fontSize: 11, color: A, fontWeight: 800, letterSpacing: 0.4 }}>OPEN EAT →</span>
         </div>
-        <button
-          onClick={markCardio}
-          disabled={cardioDone}
-          style={{
-            width: '100%', border: 'none', borderRadius: 10, padding: '13px',
-            fontSize: 13, fontWeight: 700, cursor: cardioDone ? 'default' : 'pointer',
-            background: cardioDone ? `${A}15` : A,
-            color: cardioDone ? A : '#000',
-            transition: 'all .2s',
-          }}
-        >
-          {cardioDone ? 'Cardio Complete' : 'Mark Complete'}
-        </button>
+        {[
+          { label: 'Calories', cur: Math.round(consumed.calories), target: TARGETS.calories, unit: ' kcal', pct: calPct },
+          { label: 'Protein',  cur: Math.round(consumed.protein),  target: TARGETS.protein,  unit: 'g',     pct: protPct, dim: true },
+        ].map(r => (
+          <div key={r.label} style={{ marginBottom: r.dim ? 0 : 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+              <span style={{ fontSize: 12, color: T.MUTED, fontWeight: 600 }}>{r.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.TEXT }}>
+                {r.cur}<span style={{ color: T.MUTED, fontWeight: 400 }}> / {r.target}{r.unit}</span>
+              </span>
+            </div>
+            <div style={{ background: T.SURF2, borderRadius: 5, height: 7 }}>
+              <div style={{ width: `${r.pct}%`, height: '100%', background: r.dim ? `${A}80` : A, borderRadius: 5, transition: 'width .5s ease' }} />
+            </div>
+          </div>
+        ))}
+      </button>
+
+      {/* ── Quick Log ── */}
+      <SectionLabel>Quick Log</SectionLabel>
+      <div style={{ ...card, marginBottom: 28 }}>
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 12, color: T.MUTED, fontWeight: 600, marginBottom: 10 }}>HRV Status</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {Object.entries(HRV_MAP).map(([key, val]) => (
+              <button key={key} onClick={() => setHrv(key)} style={{
+                flex: 1, borderRadius: 14, padding: '12px 6px',
+                border: hrv === key ? `2px solid ${val.color}` : `1px solid ${T.BORDER}`,
+                background: hrv === key ? `${val.color}18` : T.SURF2,
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: val.color }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: hrv === key ? val.color : T.MUTED }}>{val.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: T.MUTED, fontWeight: 600, marginBottom: 10 }}>Body Weight</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={weight}
+              onChange={e => { setWeight(e.target.value); setWeightSaved(false) }}
+              placeholder="kg"
+              style={{ ...inp, padding: '10px 12px' }}
+            />
+            <button onClick={saveWeight} style={{
+              background: weightSaved ? `${A}18` : A,
+              color: weightSaved ? A : '#000',
+              border: 'none', borderRadius: 12, padding: '10px 20px',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+              {weightSaved ? '✓ Saved' : 'Save'}
+            </button>
+          </div>
+        </div>
       </div>
 
+      {/* ── This Week ── */}
+      <SectionLabel>This Week</SectionLabel>
+      <div style={{ ...card, marginBottom: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          {weekDays.map((d, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7 }}>
+              <div style={{ fontSize: 10, fontWeight: d.isToday ? 800 : 500, color: d.isToday ? A : T.MUTED }}>{d.dayLabel}</div>
+              <div style={{
+                width: 30, height: 30, borderRadius: '50%',
+                background: d.hasData ? `${A}20` : 'transparent',
+                border: d.isToday ? `2px solid ${A}` : d.hasData ? `1px solid ${A}50` : `1px solid ${T.BORDER}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {d.hasData
+                  ? <div style={{ width: 9, height: 9, borderRadius: '50%', background: d.isToday ? A : `${A}90` }} />
+                  : d.isToday
+                    ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: A }} />
+                    : null
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Recovery Notes ── */}
       <SectionLabel>Recovery Notes</SectionLabel>
       <div style={{ ...card, marginBottom: 8 }}>
         <textarea
           value={notes}
           onChange={handleNotes}
-          placeholder="How are you feeling today? Sleep quality, soreness, energy..."
+          placeholder="Sleep quality, soreness, energy levels..."
           rows={3}
           style={{ ...inp, resize: 'none', lineHeight: 1.6, fontSize: 14, fontFamily: 'inherit' }}
         />
-        {notes.length > 0 && (
-          <div style={{ fontSize: 11, color: T.MUTED, marginTop: 8, textAlign: 'right' }}>Saved</div>
-        )}
+        {notes.length > 0 && <div style={{ fontSize: 11, color: T.MUTED, marginTop: 8, textAlign: 'right' }}>Saved</div>}
       </div>
     </div>
   )
@@ -825,7 +879,7 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
           const setupCue    = SETUP_CUES[ex.name]
 
           return (
-            <div key={exIdx} style={{ background: T.SURF, border: `1px solid ${allDone ? A + '50' : T.BORDER}`, borderRadius: 14, padding: '14px', marginBottom: 10, transition: 'border-color .2s' }}>
+            <div key={exIdx} style={{ background: T.SURF, border: `1px solid ${allDone ? A + '50' : T.BORDER}`, borderRadius: 20, padding: '16px', marginBottom: 10, transition: 'border-color .2s' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: sg?.text ? 4 : 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -840,14 +894,14 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
                   {setupCue && (
                     <button
                       onClick={() => toggleSetup(exIdx)}
-                      style={{ background: isSetupOpen ? '#FF9F0A18' : 'transparent', border: `1px solid ${isSetupOpen ? '#FF9F0A55' : T.BORDER}`, borderRadius: 6, padding: '5px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all .15s' }}
+                      style={{ background: isSetupOpen ? '#FF9F0A18' : 'transparent', border: `1px solid ${isSetupOpen ? '#FF9F0A55' : T.BORDER}`, borderRadius: 8, padding: '5px 9px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all .15s' }}
                     >
                       <IconForm size={14} color={isSetupOpen ? '#FF9F0A' : T.MUTED} />
                     </button>
                   )}
                   <button
                     onClick={() => toggleInfo(exIdx)}
-                    style={{ background: isInfoOpen ? `${A}15` : 'transparent', border: `1px solid ${isInfoOpen ? A + '40' : T.BORDER}`, borderRadius: 6, padding: '5px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all .15s' }}
+                    style={{ background: isInfoOpen ? `${A}15` : 'transparent', border: `1px solid ${isInfoOpen ? A + '40' : T.BORDER}`, borderRadius: 8, padding: '5px 9px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all .15s' }}
                   >
                     <IconInfo size={14} color={isInfoOpen ? A : T.MUTED} />
                   </button>
@@ -861,12 +915,12 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
               )}
 
               {isSetupOpen && (
-                <div style={{ background: '#FF9F0A0B', border: '1px solid #FF9F0A25', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: T.MUTED, lineHeight: 1.65 }}>
+                <div style={{ background: '#FF9F0A0B', border: '1px solid #FF9F0A25', borderRadius: 12, padding: '12px 14px', marginBottom: 12, fontSize: 12, color: T.MUTED, lineHeight: 1.65 }}>
                   {setupCue}
                 </div>
               )}
               {isInfoOpen && (
-                <div style={{ background: `${A}08`, border: `1px solid ${A}20`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: T.MUTED, lineHeight: 1.65 }}>
+                <div style={{ background: `${A}08`, border: `1px solid ${A}20`, borderRadius: 12, padding: '12px 14px', marginBottom: 12, fontSize: 12, color: T.MUTED, lineHeight: 1.65 }}>
                   {ex.info}
                 </div>
               )}
@@ -875,7 +929,7 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
                 {exSets.map((s, si) => {
                   if (s.logged) {
                     return (
-                      <div key={si} onClick={() => unlogSet(ex.name, si)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${A}10`, border: `1px solid ${A}30`, borderRadius: 9, padding: '9px 12px', cursor: 'pointer' }}>
+                      <div key={si} onClick={() => unlogSet(ex.name, si)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${A}10`, border: `1px solid ${A}30`, borderRadius: 12, padding: '9px 12px', cursor: 'pointer' }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: T.MUTED, minWidth: 20, flexShrink: 0 }}>S{si + 1}</span>
                         <IconCheck size={13} color={A} />
                         <span style={{ fontSize: 14, fontWeight: 700, color: A, flex: 1 }}>
@@ -896,7 +950,7 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
                         placeholder={ph || '—'}
                         value={s.weight}
                         onChange={e => updateSet(ex.name, si, 'weight', e.target.value)}
-                        style={{ width: 68, background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 8, color: T.TEXT, fontSize: 14, fontWeight: 600, padding: '9px 8px', outline: 'none', textAlign: 'center', boxSizing: 'border-box', flexShrink: 0 }}
+                        style={{ width: 68, background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 10, color: T.TEXT, fontSize: 16, fontWeight: 600, padding: '9px 8px', outline: 'none', textAlign: 'center', boxSizing: 'border-box', flexShrink: 0 }}
                       />
                       <span style={{ fontSize: 11, color: T.MUTED, flexShrink: 0 }}>lbs</span>
                       <input
@@ -905,12 +959,12 @@ function WorkoutDetailView({ session, sessionKey, onBack }) {
                         placeholder={ex.reps.split(/[–\s]/)[0]}
                         value={s.reps}
                         onChange={e => updateSet(ex.name, si, 'reps', e.target.value)}
-                        style={{ width: 48, background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 8, color: T.TEXT, fontSize: 14, fontWeight: 600, padding: '9px 6px', outline: 'none', textAlign: 'center', boxSizing: 'border-box', flexShrink: 0 }}
+                        style={{ width: 48, background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 10, color: T.TEXT, fontSize: 16, fontWeight: 600, padding: '9px 6px', outline: 'none', textAlign: 'center', boxSizing: 'border-box', flexShrink: 0 }}
                       />
                       <span style={{ fontSize: 11, color: T.MUTED, flexShrink: 0 }}>reps</span>
                       <button
                         onClick={() => logSet(ex.name, si)}
-                        style={{ flex: 1, minWidth: 44, background: A, color: '#000', border: 'none', borderRadius: 8, padding: '9px 8px', fontSize: 12, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.5 }}
+                        style={{ flex: 1, minWidth: 44, background: A, color: '#fff', border: 'none', borderRadius: 10, padding: '9px 8px', fontSize: 12, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.5 }}
                       >
                         LOG
                       </button>
@@ -1004,7 +1058,7 @@ function RunView({ onBack }) {
       </div>
 
       {/* Today's plan */}
-      <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 20, background: `linear-gradient(110deg, ${A}14 0%, ${T.SURF} 60%)`, border: `1px solid ${A}35` }}>
+      <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', marginBottom: 20, background: `linear-gradient(110deg, ${A}14 0%, ${T.SURF} 60%)`, border: `1px solid ${A}35` }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: A }} />
         <div style={{ padding: '16px 16px 16px 20px' }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: A, letterSpacing: 1.2, marginBottom: 6 }}>TODAY · {DAY_NAMES_FULL[dow]}</div>
@@ -1016,7 +1070,7 @@ function RunView({ onBack }) {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
         {[{ val: totalMiles, label: 'TOTAL MILES' }, { val: weekMiles, label: 'THIS WEEK' }].map(s => (
-          <div key={s.label} style={{ background: T.SURF2, borderRadius: 14, padding: '16px 14px' }}>
+          <div key={s.label} style={{ background: T.SURF2, borderRadius: 18, padding: '16px 14px' }}>
             <div style={{ fontSize: 30, fontWeight: 900, color: A, letterSpacing: '-0.5px', lineHeight: 1 }}>{s.val}</div>
             <div style={{ fontSize: 9, color: T.MUTED, marginTop: 6, fontWeight: 700, letterSpacing: 0.8 }}>{s.label}</div>
           </div>
@@ -1024,7 +1078,7 @@ function RunView({ onBack }) {
       </div>
 
       {/* Map placeholder */}
-      <div style={{ borderRadius: 16, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
+      <div style={{ borderRadius: 22, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
         <IconMapPin size={34} color={T.DIM} />
         <div style={{ fontSize: 13, fontWeight: 700, color: T.MUTED }}>GPS Map</div>
         <div style={{ fontSize: 11, color: T.DIM }}>Available after deployment</div>
@@ -1056,7 +1110,7 @@ function RunView({ onBack }) {
           <div style={{ fontSize: 10, color: T.MUTED, marginBottom: 8, fontWeight: 700, letterSpacing: 0.5 }}>ZONE</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {RUN_ZONES.map(z => (
-              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 10, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
+              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 12, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
                 <div style={{ fontSize: 16, fontWeight: 900, color: form.zone === z.n ? z.color : T.MUTED, lineHeight: 1 }}>{z.n}</div>
                 <div style={{ fontSize: 7, fontWeight: 800, color: form.zone === z.n ? z.color : T.DIM, letterSpacing: 0.5, marginTop: 3 }}>{z.label.split(' ')[0].toUpperCase()}</div>
               </button>
@@ -1069,7 +1123,7 @@ function RunView({ onBack }) {
           <textarea placeholder="How did it feel?" style={{ ...inp, resize: 'none', height: 72, fontFamily: 'inherit' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
         </div>
 
-        <button onClick={logRun} style={{ width: '100%', background: A, color: '#000', border: 'none', borderRadius: 10, padding: '14px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Run</button>
+        <button onClick={logRun} style={{ width: '100%', background: A, color: '#fff', border: 'none', borderRadius: 14, padding: '15px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Run</button>
       </div>
 
       {/* Run history */}
@@ -1135,7 +1189,7 @@ function BikeView({ onBack }) {
   const zoneColor = n => RUN_ZONES.find(z => z.n === n)?.color || T.MUTED
   const fmtDate = ds => new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const last5 = rides.slice(0, 5)
-  const BIKE_TINT = '#E07820'
+  const BIKE_TINT = '#00C47A'
 
   return (
     <div style={pg}>
@@ -1161,7 +1215,7 @@ function BikeView({ onBack }) {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
         {[{ val: totalMiles, label: 'TOTAL MILES' }, { val: weekMiles, label: 'THIS WEEK' }].map(s => (
-          <div key={s.label} style={{ background: T.SURF2, borderRadius: 14, padding: '16px 14px' }}>
+          <div key={s.label} style={{ background: T.SURF2, borderRadius: 18, padding: '16px 14px' }}>
             <div style={{ fontSize: 30, fontWeight: 900, color: BIKE_TINT, letterSpacing: '-0.5px', lineHeight: 1 }}>{s.val}</div>
             <div style={{ fontSize: 9, color: T.MUTED, marginTop: 6, fontWeight: 700, letterSpacing: 0.8 }}>{s.label}</div>
           </div>
@@ -1169,7 +1223,7 @@ function BikeView({ onBack }) {
       </div>
 
       {/* Map placeholder */}
-      <div style={{ borderRadius: 16, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
+      <div style={{ borderRadius: 22, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
         <IconMapPin size={34} color={T.DIM} />
         <div style={{ fontSize: 13, fontWeight: 700, color: T.MUTED }}>GPS Map</div>
         <div style={{ fontSize: 11, color: T.DIM }}>Available after deployment</div>
@@ -1199,7 +1253,7 @@ function BikeView({ onBack }) {
           <div style={{ fontSize: 10, color: T.MUTED, marginBottom: 8, fontWeight: 700, letterSpacing: 0.5 }}>ZONE</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {RUN_ZONES.map(z => (
-              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 10, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
+              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 12, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
                 <div style={{ fontSize: 16, fontWeight: 900, color: form.zone === z.n ? z.color : T.MUTED, lineHeight: 1 }}>{z.n}</div>
                 <div style={{ fontSize: 7, fontWeight: 800, color: form.zone === z.n ? z.color : T.DIM, letterSpacing: 0.5, marginTop: 3 }}>{z.label.split(' ')[0].toUpperCase()}</div>
               </button>
@@ -1212,7 +1266,7 @@ function BikeView({ onBack }) {
           <textarea placeholder="How did it feel?" style={{ ...inp, resize: 'none', height: 72, fontFamily: 'inherit' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
         </div>
 
-        <button onClick={logRide} style={{ width: '100%', background: BIKE_TINT, color: '#fff', border: 'none', borderRadius: 10, padding: '14px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Ride</button>
+        <button onClick={logRide} style={{ width: '100%', background: BIKE_TINT, color: '#fff', border: 'none', borderRadius: 14, padding: '15px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Ride</button>
       </div>
 
       {/* Ride history */}
@@ -1294,7 +1348,7 @@ function SwimView({ onBack }) {
       </div>
 
       {/* Shoulder clearance note */}
-      <div style={{ background: '#FF9F0A0A', border: '1px solid #FF9F0A28', borderRadius: 14, padding: '12px 14px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ background: '#FF9F0A0A', border: '1px solid #FF9F0A28', borderRadius: 18, padding: '14px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <div style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠</div>
         <div style={{ fontSize: 12, color: T.TEXT, lineHeight: 1.5 }}>Full swim volume requires shoulder clearance. Ease into yardage and stop if you feel shoulder impingement or pain.</div>
       </div>
@@ -1302,7 +1356,7 @@ function SwimView({ onBack }) {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
         {[{ val: totalYards.toLocaleString(), label: 'TOTAL YARDS' }, { val: weekYards.toLocaleString(), label: 'THIS WEEK' }].map(s => (
-          <div key={s.label} style={{ background: T.SURF2, borderRadius: 14, padding: '16px 14px' }}>
+          <div key={s.label} style={{ background: T.SURF2, borderRadius: 18, padding: '16px 14px' }}>
             <div style={{ fontSize: 26, fontWeight: 900, color: SWIM_TINT, letterSpacing: '-0.5px', lineHeight: 1 }}>{s.val}</div>
             <div style={{ fontSize: 9, color: T.MUTED, marginTop: 6, fontWeight: 700, letterSpacing: 0.8 }}>{s.label}</div>
           </div>
@@ -1310,7 +1364,7 @@ function SwimView({ onBack }) {
       </div>
 
       {/* Map placeholder */}
-      <div style={{ borderRadius: 16, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
+      <div style={{ borderRadius: 22, height: 144, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${T.BORDER}`, background: T.SURF, marginBottom: 24, gap: 8 }}>
         <IconMapPin size={34} color={T.DIM} />
         <div style={{ fontSize: 13, fontWeight: 700, color: T.MUTED }}>GPS Map</div>
         <div style={{ fontSize: 11, color: T.DIM }}>Available after deployment</div>
@@ -1323,9 +1377,9 @@ function SwimView({ onBack }) {
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
             <div style={secLbl}>DISTANCE</div>
-            <div style={{ display: 'flex', background: T.SURF2, borderRadius: 8, padding: 2, gap: 2 }}>
+            <div style={{ display: 'flex', background: T.SURF2, borderRadius: 12, padding: 3, gap: 2 }}>
               {['yds', 'mt'].map(u => (
-                <button key={u} onClick={() => setUnit(u)} style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: unit === u ? SWIM_TINT : 'transparent', color: unit === u ? '#fff' : T.MUTED, transition: 'all .15s' }}>{u}</button>
+                <button key={u} onClick={() => setUnit(u)} style={{ fontSize: 10, fontWeight: 700, padding: '5px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: unit === u ? SWIM_TINT : 'transparent', color: unit === u ? '#fff' : T.MUTED, transition: 'all .15s' }}>{u}</button>
               ))}
             </div>
           </div>
@@ -1341,7 +1395,7 @@ function SwimView({ onBack }) {
           <div style={secLbl}>STROKE</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {SWIM_STROKES.map(s => (
-              <button key={s} onClick={() => setForm(p => ({ ...p, stroke: s }))} style={{ flex: '1 1 auto', border: `1px solid ${form.stroke === s ? SWIM_TINT : T.BORDER}`, borderRadius: 10, padding: '8px 4px', background: form.stroke === s ? `${SWIM_TINT}18` : 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: form.stroke === s ? SWIM_TINT : T.MUTED, transition: 'all .15s' }}>{s}</button>
+              <button key={s} onClick={() => setForm(p => ({ ...p, stroke: s }))} style={{ flex: '1 1 auto', border: `1px solid ${form.stroke === s ? SWIM_TINT : T.BORDER}`, borderRadius: 12, padding: '9px 4px', background: form.stroke === s ? `${SWIM_TINT}18` : 'transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: form.stroke === s ? SWIM_TINT : T.MUTED, transition: 'all .15s' }}>{s}</button>
             ))}
           </div>
         </div>
@@ -1350,7 +1404,7 @@ function SwimView({ onBack }) {
           <div style={secLbl}>ZONE</div>
           <div style={{ display: 'flex', gap: 6 }}>
             {RUN_ZONES.map(z => (
-              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 10, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
+              <button key={z.n} onClick={() => setForm(p => ({ ...p, zone: z.n }))} style={{ flex: 1, border: `1px solid ${form.zone === z.n ? z.color : T.BORDER}`, borderRadius: 12, padding: '9px 2px', background: form.zone === z.n ? `${z.color}18` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all .15s' }}>
                 <div style={{ fontSize: 16, fontWeight: 900, color: form.zone === z.n ? z.color : T.MUTED, lineHeight: 1 }}>{z.n}</div>
                 <div style={{ fontSize: 7, fontWeight: 800, color: form.zone === z.n ? z.color : T.DIM, letterSpacing: 0.5, marginTop: 3 }}>{z.label.split(' ')[0].toUpperCase()}</div>
               </button>
@@ -1363,7 +1417,7 @@ function SwimView({ onBack }) {
           <textarea placeholder="How did it feel?" style={{ ...inp, resize: 'none', height: 72, fontFamily: 'inherit' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
         </div>
 
-        <button onClick={logSwim} style={{ width: '100%', background: SWIM_TINT, color: '#fff', border: 'none', borderRadius: 10, padding: '14px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Swim</button>
+        <button onClick={logSwim} style={{ width: '100%', background: SWIM_TINT, color: '#fff', border: 'none', borderRadius: 14, padding: '15px', fontSize: 14, fontWeight: 800, cursor: 'pointer', letterSpacing: 0.4 }}>Log Swim</button>
       </div>
 
       {/* Swim history */}
@@ -1511,8 +1565,8 @@ function GuidedSession({ steps, label, onComplete, onExit }) {
         <button onClick={onExit} style={{ background: 'none', border: 'none', color: T.MUTED, cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
           <IconX size={20} color={T.MUTED} />
         </button>
-        <div style={{ flex: 1, background: T.SURF2, borderRadius: 4, height: 5, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress * 100}%`, background: YOGA_TINT, borderRadius: 4, transition: 'width 1s linear' }} />
+        <div style={{ flex: 1, background: T.SURF2, borderRadius: 6, height: 8, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progress * 100}%`, background: YOGA_TINT, borderRadius: 6, transition: 'width 1s linear' }} />
         </div>
         <div style={{ fontSize: 11, fontWeight: 700, color: T.MUTED, flexShrink: 0 }}>{stepIdx + 1} / {steps.length}</div>
       </div>
@@ -1538,15 +1592,15 @@ function GuidedSession({ steps, label, onComplete, onExit }) {
 
         {/* Controls */}
         {!started ? (
-          <button onClick={toggle} style={{ background: YOGA_TINT, color: '#fff', border: 'none', borderRadius: 16, padding: '16px 52px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+          <button onClick={toggle} style={{ background: YOGA_TINT, color: '#fff', border: 'none', borderRadius: 18, padding: '18px 60px', fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
             Start Session
           </button>
         ) : (
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={toggle} style={{ background: running ? T.SURF2 : YOGA_TINT, color: running ? T.TEXT : '#fff', border: `1px solid ${running ? T.BORDER : YOGA_TINT}`, borderRadius: 14, padding: '13px 32px', fontSize: 14, fontWeight: 800, cursor: 'pointer', minWidth: 130, transition: 'all .15s' }}>
+            <button onClick={toggle} style={{ background: running ? T.SURF2 : YOGA_TINT, color: running ? T.TEXT : '#fff', border: `1px solid ${running ? T.BORDER : YOGA_TINT}`, borderRadius: 16, padding: '15px 36px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minWidth: 140, transition: 'all .15s' }}>
               {running ? '⏸  Pause' : '▶  Resume'}
             </button>
-            <button onClick={skip} style={{ background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 14, padding: '13px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={skip} style={{ background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 16, padding: '15px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
               Skip →
             </button>
           </div>
@@ -1648,7 +1702,7 @@ function YogaView({ onBack }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: T.TEXT, marginBottom: 14 }}>Choose a Session</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {YOGA_SESSION_TYPES.map(t => (
-            <button key={t.id} onClick={() => selectType(t)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, border: `1px solid ${sessionType?.id === t.id ? YOGA_TINT : T.BORDER}`, background: sessionType?.id === t.id ? `${YOGA_TINT}14` : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
+            <button key={t.id} onClick={() => selectType(t)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: 16, border: `1px solid ${sessionType?.id === t.id ? YOGA_TINT : T.BORDER}`, background: sessionType?.id === t.id ? `${YOGA_TINT}14` : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all .15s' }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: sessionType?.id === t.id ? T.TEXT : T.MUTED }}>{t.label}</div>
                 <div style={{ fontSize: 11, color: T.DIM, marginTop: 2 }}>{t.detail} · {t.steps.length} steps</div>
@@ -1660,7 +1714,7 @@ function YogaView({ onBack }) {
       </div>
 
       {sessionType && (
-        <button onClick={() => setPhase('guide')} style={{ width: '100%', background: YOGA_TINT, color: '#fff', border: 'none', borderRadius: 14, padding: '16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', marginBottom: 24, letterSpacing: 0.3 }}>
+        <button onClick={() => setPhase('guide')} style={{ width: '100%', background: YOGA_TINT, color: '#fff', border: 'none', borderRadius: 16, padding: '16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', marginBottom: 24, letterSpacing: 0.3 }}>
           Start {sessionType.label}
         </button>
       )}
@@ -1677,11 +1731,11 @@ function YogaView({ onBack }) {
           <div style={secLbl}>NOTES</div>
           <textarea placeholder="Areas you focused on, how the body felt..." style={{ ...inp, resize: 'none', height: 72, fontFamily: 'inherit' }} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
         </div>
-        <button onClick={handleLogManual} style={{ width: '100%', background: `${YOGA_TINT}18`, color: YOGA_TINT, border: `1px solid ${YOGA_TINT}30`, borderRadius: 10, padding: '13px', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Log Session</button>
+        <button onClick={handleLogManual} style={{ width: '100%', background: `${YOGA_TINT}18`, color: YOGA_TINT, border: `1px solid ${YOGA_TINT}30`, borderRadius: 14, padding: '14px', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Log Session</button>
       </div>
 
       {/* Reference guide */}
-      <button onClick={() => setGuideOpen(o => !o)} style={{ width: '100%', background: guideOpen ? `${YOGA_TINT}18` : T.SURF2, border: `1px solid ${guideOpen ? YOGA_TINT : T.BORDER}`, borderRadius: 12, padding: '13px', fontSize: 13, fontWeight: 700, color: guideOpen ? YOGA_TINT : T.TEXT, cursor: 'pointer', marginBottom: guideOpen ? 10 : 24, transition: 'all .2s' }}>
+      <button onClick={() => setGuideOpen(o => !o)} style={{ width: '100%', background: guideOpen ? `${YOGA_TINT}18` : T.SURF2, border: `1px solid ${guideOpen ? YOGA_TINT : T.BORDER}`, borderRadius: 14, padding: '14px', fontSize: 13, fontWeight: 700, color: guideOpen ? YOGA_TINT : T.TEXT, cursor: 'pointer', marginBottom: guideOpen ? 10 : 24, transition: 'all .2s' }}>
         {guideOpen ? '▾  Sunday Recovery Reference' : '▸  Sunday Recovery Reference'}
       </button>
       {guideOpen && (
@@ -1737,7 +1791,7 @@ function YogaView({ onBack }) {
 const MODALITIES = [
   { id: 'lift', label: 'LIFT', Icon: IconTrain, tint: null,       available: true },
   { id: 'run',  label: 'RUN',  Icon: IconRun,   tint: '#D94F3A',  available: true },
-  { id: 'bike', label: 'BIKE', Icon: IconBike,  tint: '#E07820',  available: true },
+  { id: 'bike', label: 'BIKE', Icon: IconBike,  tint: '#00C47A',  available: true },
   { id: 'swim', label: 'SWIM', Icon: IconSwim,  tint: '#2878C8',  available: true },
   { id: 'yoga', label: 'YOGA', Icon: IconYoga,  tint: '#7B5BB8',  available: true },
 ]
@@ -1748,7 +1802,7 @@ function SessionCard({ session, isToday, onTap }) {
   const A = T.ACC
   const { name, day, focus, badge, exercises } = session
   return (
-    <div onClick={onTap} style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 10, background: isToday ? `linear-gradient(110deg, ${A}10 0%, ${T.SURF} 55%)` : T.SURF, border: `1px solid ${isToday ? A + '40' : T.BORDER}`, boxShadow: isToday ? `0 0 24px ${A}10` : 'none', cursor: 'pointer' }}>
+    <div onClick={onTap} style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 10, background: isToday ? `linear-gradient(110deg, ${A}10 0%, ${T.SURF} 55%)` : T.SURF, border: `1px solid ${isToday ? A + '40' : T.BORDER}`, boxShadow: isToday ? `0 0 28px ${A}12` : 'none', cursor: 'pointer' }}>
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: isToday ? A : T.DIM }} />
       <div style={{ padding: '18px 16px 18px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -1767,12 +1821,11 @@ function SessionCard({ session, isToday, onTap }) {
     </div>
   )
 }
-function TrainTab() {
+function TrainTab({ modality, setModality }) {
   const T = useT()
   const A = T.ACC
   const { pg } = makeS(T)
   const dow = new Date().getDay()
-  const [modality, setModality] = useState(null)
   const [selected, setSelected] = useState(null)
 
   if (selected !== null) {
@@ -1822,7 +1875,7 @@ function TrainTab() {
               gridColumn: mod.id === 'yoga' ? 'span 2' : undefined,
               background: `linear-gradient(145deg, ${ic}1E 0%, ${T.SURF} 60%)`,
               border: `1px solid ${ic}40`,
-              borderRadius: 20,
+              borderRadius: 24,
               padding: '24px 18px 22px',
               cursor: 'pointer',
               display: 'flex',
@@ -1831,7 +1884,7 @@ function TrainTab() {
               gap: 16,
               textAlign: 'left',
             }}>
-              <div style={{ width: 52, height: 52, borderRadius: 15, background: `${ic}18`, border: `1px solid ${ic}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: `${ic}18`, border: `1px solid ${ic}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <mod.Icon size={26} color={ic} />
               </div>
               <div>
@@ -1876,7 +1929,7 @@ function EatTab({ meals, onAddMeal }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <SectionLabel style={{ marginBottom: 0 }}>Meals Logged</SectionLabel>
-        {!showForm && <button onClick={() => setShowForm(true)} style={{ background: A, color: '#000', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Add</button>}
+        {!showForm && <button onClick={() => setShowForm(true)} style={{ background: A, color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Add</button>}
       </div>
       {showForm && (
         <div style={{ ...card, marginBottom: 12 }}>
@@ -1888,8 +1941,8 @@ function EatTab({ meals, onAddMeal }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleSubmit} style={{ flex: 1, background: A, color: '#000', border: 'none', borderRadius: 10, padding: '13px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save Meal</button>
-            <button onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }} style={{ flex: 1, background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: '13px', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleSubmit} style={{ flex: 1, background: A, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save Meal</button>
+            <button onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }} style={{ flex: 1, background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 12, padding: '14px', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
       )}
@@ -2024,12 +2077,12 @@ function MealPrepSection({ onAddMeal }) {
       <div style={{ ...card, marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: templates.length > 0 ? 12 : 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: T.TEXT }}>Meal Templates</div>
-          {!showTForm && <button onClick={() => setShowTForm(true)} style={{ background: 'none', border: `1px solid ${T.BORDER}`, borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 700, color: T.MUTED, cursor: 'pointer' }}>+ New</button>}
+          {!showTForm && <button onClick={() => setShowTForm(true)} style={{ background: 'none', border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: '7px 14px', fontSize: 11, fontWeight: 700, color: T.MUTED, cursor: 'pointer' }}>+ New</button>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
           {templates.map(t => (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button onClick={() => onAddMeal({ id: Date.now(), ...t })} style={{ flex: 1, background: `${A}10`, border: `1px solid ${A}28`, borderRadius: 10, padding: '10px 12px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button onClick={() => onAddMeal({ id: Date.now(), ...t })} style={{ flex: 1, background: `${A}10`, border: `1px solid ${A}28`, borderRadius: 14, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.TEXT }}>{t.name}</div>
                   <div style={{ fontSize: 11, color: T.MUTED, marginTop: 2 }}>{t.calories} kcal · {t.protein}g P · {t.carbs}g C · {t.fat}g F</div>
@@ -2049,8 +2102,8 @@ function MealPrepSection({ onAddMeal }) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={saveTemplate} style={{ flex: 1, background: A, color: '#000', border: 'none', borderRadius: 10, padding: '11px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Template</button>
-              <button onClick={() => { setShowTForm(false); setTForm(EMPTY_FORM) }} style={{ flex: 1, background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: '11px', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={saveTemplate} style={{ flex: 1, background: A, color: '#fff', border: 'none', borderRadius: 12, padding: '12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save Template</button>
+              <button onClick={() => { setShowTForm(false); setTForm(EMPTY_FORM) }} style={{ flex: 1, background: 'none', color: T.MUTED, border: `1px solid ${T.BORDER}`, borderRadius: 12, padding: '12px', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         )}
@@ -2064,7 +2117,7 @@ function MealPrepSection({ onAddMeal }) {
             const { cal, pro } = dayTotals(di)
             const hasMeals = (weeklyPlan[di] || []).length > 0
             return (
-              <button key={day} onClick={() => setOpenDay(di)} style={{ background: hasMeals ? `${A}12` : T.SURF2, border: `1px solid ${hasMeals ? `${A}30` : T.BORDER}`, borderRadius: 10, padding: '9px 3px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <button key={day} onClick={() => setOpenDay(di)} style={{ background: hasMeals ? `${A}12` : T.SURF2, border: `1px solid ${hasMeals ? `${A}30` : T.BORDER}`, borderRadius: 14, padding: '10px 3px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                 <div style={{ fontSize: 9, fontWeight: 800, color: T.MUTED, letterSpacing: 0.3 }}>{day}</div>
                 {hasMeals ? (
                   <>
@@ -2083,7 +2136,7 @@ function MealPrepSection({ onAddMeal }) {
       {/* Day planner modal */}
       {openDay !== null && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }} onClick={() => { setOpenDay(null); setPlanForm(EMPTY_FORM) }}>
-          <div style={{ background: T.BG, width: '100%', maxWidth: 430, maxHeight: '82dvh', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: T.SURF, width: '100%', maxWidth: 430, maxHeight: '82dvh', borderRadius: '24px 24px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${T.BORDER}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
               <button onClick={() => { setOpenDay(null); setPlanForm(EMPTY_FORM) }} style={{ background: 'none', border: 'none', color: T.MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
                 <IconBack size={20} color={T.MUTED} />
@@ -2095,7 +2148,7 @@ function MealPrepSection({ onAddMeal }) {
               <div style={secHead}>Quick Add from Templates</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 22 }}>
                 {templates.map(t => (
-                  <button key={t.id} onClick={() => addToPlan(openDay, t)} style={{ background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 10, padding: '10px 14px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button key={t.id} onClick={() => addToPlan(openDay, t)} style={{ background: T.SURF2, border: `1px solid ${T.BORDER}`, borderRadius: 14, padding: '12px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: T.TEXT }}>{t.name}</div>
                       <div style={{ fontSize: 11, color: T.MUTED, marginTop: 1 }}>{t.calories} kcal · {t.protein}g P</div>
@@ -2112,7 +2165,7 @@ function MealPrepSection({ onAddMeal }) {
                     <input key={k} type="number" placeholder={ph} style={inp} value={planForm[k]} onChange={e => setPlanForm(p => ({ ...p, [k]: e.target.value }))} />
                   ))}
                 </div>
-                <button onClick={addPlanManual} style={{ width: '100%', background: A, color: '#000', border: 'none', borderRadius: 10, padding: '11px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add to {PLANNER_DAYS[openDay]}</button>
+                <button onClick={addPlanManual} style={{ width: '100%', background: A, color: '#fff', border: 'none', borderRadius: 12, padding: '12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Add to {PLANNER_DAYS[openDay]}</button>
               </div>
               {(weeklyPlan[openDay] || []).length > 0 && (
                 <>
@@ -2241,7 +2294,7 @@ function DayDetailModal({ ds, onClose }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
-      <div style={{ background: T.BG, width: '100%', maxWidth: 430, maxHeight: '90dvh', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: T.SURF, width: '100%', maxWidth: 430, maxHeight: '90dvh', borderRadius: '24px 24px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${T.BORDER}`, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.MUTED, cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}>
             <IconBack size={20} color={T.MUTED} />
@@ -2387,9 +2440,9 @@ function HistorySection() {
     <div style={{ marginTop: 28, marginBottom: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <SectionLabel>History</SectionLabel>
-        <div style={{ display: 'flex', background: T.SURF2, borderRadius: 10, padding: 3, gap: 3 }}>
+        <div style={{ display: 'flex', background: T.SURF2, borderRadius: 14, padding: 4, gap: 3 }}>
           {['calendar', 'list'].map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', background: view === v ? A : 'transparent', color: view === v ? '#000' : T.MUTED, transition: 'all .2s', textTransform: 'capitalize' }}>{v}</button>
+            <button key={v} onClick={() => setView(v)} style={{ fontSize: 11, fontWeight: 700, padding: '6px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: view === v ? A : 'transparent', color: view === v ? '#fff' : T.MUTED, transition: 'all .2s', textTransform: 'capitalize' }}>{v}</button>
           ))}
         </div>
       </div>
@@ -2399,7 +2452,7 @@ function HistorySection() {
       )}
 
       {hasAnyData && view === 'calendar' && (
-        <div style={{ background: T.SURF, borderRadius: 16, padding: '16px 14px' }}>
+        <div style={{ background: T.SURF, borderRadius: 22, padding: '18px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
             <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: T.MUTED, cursor: 'pointer', fontSize: 18, padding: '0 6px', lineHeight: 1 }}>‹</button>
             <div style={{ fontSize: 13, fontWeight: 700, color: T.TEXT }}>{monthName}</div>
@@ -2435,7 +2488,7 @@ function HistorySection() {
             const { session, totalSets, totalCal, cardios, weight } = getDaySummary(ds)
             const label = new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
             return (
-              <div key={ds} onClick={() => setSelectedDay(ds)} style={{ background: T.SURF, borderRadius: 14, padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={ds} onClick={() => setSelectedDay(ds)} style={{ background: T.SURF, borderRadius: 18, padding: '14px 18px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 800, color: T.TEXT }}>{label}</div>
                   <div style={{ fontSize: 11, color: T.MUTED, marginTop: 3 }}>
@@ -2463,7 +2516,7 @@ function PillBtn({ active, color, onClick, children }) {
   const T = useT()
   const A = T.ACC
   return (
-    <button onClick={onClick} style={{ flex: 1, border: `1px solid ${active ? color : T.BORDER}`, borderRadius: 10, padding: '11px 6px', background: active ? `${color}20` : 'transparent', color: active ? color : T.MUTED, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+    <button onClick={onClick} style={{ flex: 1, border: `1px solid ${active ? color : T.BORDER}`, borderRadius: 12, padding: '13px 6px', background: active ? `${color}20` : 'transparent', color: active ? color : T.MUTED, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
       {children}
     </button>
   )
@@ -2549,7 +2602,7 @@ function LogTab() {
       <div style={{ ...card, marginBottom: 28 }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: T.MUTED, fontWeight: 600, marginBottom: 8 }}>Body Weight (kg)</div>
-          <input type="number" placeholder="e.g. 82.5" value={weight} onChange={e => setWeight(e.target.value)} style={{ ...inp, fontSize: 20, fontWeight: 700, padding: '12px 14px' }} />
+          <input type="number" inputMode="decimal" placeholder="e.g. 82.5" value={weight} onChange={e => setWeight(e.target.value)} style={{ ...inp, fontSize: 20, fontWeight: 700, padding: '12px 14px' }} />
         </div>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, color: T.MUTED, fontWeight: 600, marginBottom: 10 }}>HRV Status</div>
@@ -2588,21 +2641,21 @@ function LogTab() {
                 )})}
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <input type="number" placeholder="Duration (min)" value={cardioForm.duration} onChange={e => setCardioForm(f => ({ ...f, duration: e.target.value }))} style={{ ...inp, flex: 1 }} />
+                <input type="number" inputMode="numeric" placeholder="Duration (min)" value={cardioForm.duration} onChange={e => setCardioForm(f => ({ ...f, duration: e.target.value }))} style={{ ...inp, flex: 1 }} />
                 <select value={cardioForm.zone} onChange={e => setCardioForm(f => ({ ...f, zone: Number(e.target.value) }))} style={{ ...inp, flex: 1 }}>
                   {[1,2,3,4,5].map(z => <option key={z} value={z}>Zone {z}</option>)}
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={addCardio} style={{ flex: 1, background: A, color: '#000', border: 'none', borderRadius: 10, padding: '11px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add</button>
-                <button onClick={() => setShowCardioForm(false)} style={{ flex: 1, background: 'none', border: `1px solid ${T.BORDER}`, color: T.MUTED, borderRadius: 10, padding: '11px', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={addCardio} style={{ flex: 1, background: A, color: '#fff', border: 'none', borderRadius: 12, padding: '12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+                <button onClick={() => setShowCardioForm(false)} style={{ flex: 1, background: 'none', border: `1px solid ${T.BORDER}`, color: T.MUTED, borderRadius: 12, padding: '12px', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowCardioForm(true)} style={{ width: '100%', background: 'none', border: `1px dashed ${T.BORDER}`, borderRadius: 10, color: T.MUTED, padding: '11px', fontSize: 13, cursor: 'pointer' }}>+ Add Cardio Session</button>
+            <button onClick={() => setShowCardioForm(true)} style={{ width: '100%', background: 'none', border: `1px dashed ${T.BORDER}`, borderRadius: 12, color: T.MUTED, padding: '14px', fontSize: 13, cursor: 'pointer' }}>+ Add Cardio Session</button>
           )}
         </div>
-        <button onClick={handleSave} style={{ width: '100%', marginTop: 20, background: saved ? `${A}20` : A, color: saved ? A : '#000', border: saved ? `1px solid ${A}50` : 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all .2s' }}>
+        <button onClick={handleSave} style={{ width: '100%', marginTop: 20, background: saved ? `${A}20` : A, color: saved ? A : '#fff', border: saved ? `1px solid ${A}50` : 'none', borderRadius: 14, padding: '15px', fontSize: 14, fontWeight: 800, cursor: 'pointer', transition: 'all .2s' }}>
           {saved ? 'Saved' : 'Save Log'}
         </button>
       </div>
@@ -2721,8 +2774,8 @@ function LogTab() {
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: A, letterSpacing: '-0.5px' }}>{analytics.cardioConsistency}%</div>
           </div>
-          <div style={{ background: T.SURF2, borderRadius: 4, height: 6 }}>
-            <div style={{ width: `${analytics.cardioConsistency}%`, height: '100%', background: A, borderRadius: 4, transition: 'width .5s ease' }} />
+          <div style={{ background: T.SURF2, borderRadius: 5, height: 7 }}>
+            <div style={{ width: `${analytics.cardioConsistency}%`, height: '100%', background: A, borderRadius: 5, transition: 'width .5s ease' }} />
           </div>
         </div>
       </div>
@@ -2743,7 +2796,8 @@ export default function App() {
   }
   const colors = mode === 'dark' ? DARK : LIGHT
 
-  const [tab, setTab]   = useState('today')
+  const [tab, setTab]           = useState('today')
+  const [modality, setModality] = useState(null)
   const [meals, setMeals] = useState(() => lsLoad(`meals_${todayKey()}`, []))
   const addMeal = meal => {
     const updated = [...meals, meal]
@@ -2752,18 +2806,18 @@ export default function App() {
 
   return (
     <ThemeCtx.Provider value={{ colors, mode, toggle }}>
-      <div style={{ background: colors.BG, minHeight: '100dvh', maxWidth: 430, margin: '0 auto', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', color: colors.TEXT, transition: 'background .3s, color .3s' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 90 }}>
-          {tab === 'today' && <TodayTab meals={meals} setTab={setTab} />}
-          {tab === 'train' && <TrainTab />}
+      <div style={{ background: colors.BG, minHeight: '100dvh', maxWidth: 430, margin: '0 auto', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', color: colors.TEXT, transition: 'background .3s, color .3s', WebkitFontSmoothing: 'antialiased', paddingTop: 'env(safe-area-inset-top)' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 90, overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
+          {tab === 'today' && <TodayTab meals={meals} setTab={setTab} setModality={setModality} />}
+          {tab === 'train' && <TrainTab modality={modality} setModality={setModality} />}
           {tab === 'eat'   && <EatTab meals={meals} onAddMeal={addMeal} />}
           {tab === 'log'   && <LogTab />}
         </div>
-        <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, background: colors.BG, borderTop: `1px solid ${colors.BORDER}`, display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 100, transition: 'background .3s, border-color .3s' }}>
+        <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, background: colors.SURF, borderRadius: '22px 22px 0 0', boxShadow: '0 -1px 0 rgba(255,255,255,0.05)', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 100, transition: 'background .3s' }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: 'none', border: 'none', padding: '14px 0 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', color: tab === t.id ? colors.ACC : colors.MUTED, borderTop: `2px solid ${tab === t.id ? colors.ACC : 'transparent'}`, transition: 'color .15s' }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: 'none', border: 'none', padding: '16px 0 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', color: tab === t.id ? colors.ACC : colors.MUTED, transition: 'color .15s' }}>
               <t.Icon size={22} color={tab === t.id ? colors.ACC : colors.MUTED} />
-              <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.3 }}>{t.label}</span>
+              <span style={{ fontSize: 11, fontWeight: tab === t.id ? 700 : 500, letterSpacing: 0.3 }}>{t.label}</span>
             </button>
           ))}
         </nav>
